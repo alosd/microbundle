@@ -1,3 +1,6 @@
+import fs from 'fs';
+import camelCase from 'camelcase';
+
 export function shouldCssModules(options) {
 	const passedInOption = processCssmodulesArgument(options);
 
@@ -12,24 +15,43 @@ export function shouldCssModules(options) {
 
 export function cssModulesConfig(options) {
 	const passedInOption = processCssmodulesArgument(options);
-	const isWatchMode = options.watch;
-	const hasPassedInScopeName = !(
-		typeof passedInOption === 'boolean' || passedInOption === null
-	);
+	// const isWatchMode = options.watch;
+	// const hasPassedInScopeName = !(
+	// 	typeof passedInOption === 'boolean' || passedInOption === null
+	// );
 
-	if (shouldCssModules(options) || hasPassedInScopeName) {
-		let generateScopedName = isWatchMode
-			? '_[name]__[local]__[hash:base64:5]'
-			: '_[hash:base64:5]';
+	// if (shouldCssModules(options) || hasPassedInScopeName) {
+	let generateScopedName = '[local]__[hash:base64:5]';
+	//isWatchMode
+	// 		? '_[name]__[local]__[hash:base64:5]'
+	// 		: '_[hash:base64:5]';
 
-		if (hasPassedInScopeName) {
-			generateScopedName = passedInOption; // would be the string from --css-modules "_[hash]".
-		}
-
-		return { generateScopedName };
+	if (typeof passedInOption === 'string') {
+		generateScopedName = passedInOption; // would be the string from --css-modules "_[hash]".
 	}
 
-	return false;
+	// 	return { generateScopedName };
+	// }
+
+	// return false;
+
+	return {
+		generateScopedName,
+		localsConvention: (originalClassName, generatedClassName, inputFile) => {
+			return camelCase(originalClassName);
+		},
+		getJSON: (filepath, json, outpath) => {
+			const declarations = ['const classes: {']
+				.concat(
+					...Object.keys(json).map(x => `\t${x}:string;`),
+					'\t[key: string]: string;',
+					'};',
+					'export default classes;',
+				)
+				.join('\n');
+			fs.writeFileSync(filepath + '.d.ts', declarations);
+		},
+	};
 }
 
 /**

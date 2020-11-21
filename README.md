@@ -20,6 +20,12 @@
 
 ---
 
+## Differences with original microbundle
+
+- generate declarations for css|scss modules
+- styles imported using camelCase notation
+- default scope name changed to '[local]\_[hash:base64:5]' both for build and watch mode
+
 ## ✨ Features <a name="features"></a>
 
 - **One dependency** to bundle your library using only a `package.json`
